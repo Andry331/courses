@@ -70,7 +70,7 @@ def add_courses():
 
         course_name_in_db = Course.query.filter_by(course_name=request.form['course_name']).first()
         description_in_db = Course.query.filter_by(course_name=request.form['description']).first()
-        print(course_name_in_db, description_in_db)
+
         if course_name_in_db != None or description_in_db != None:
             flash('Курс із такою назвою або описом вже існує')
             return render_template('add_courses.html')
