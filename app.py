@@ -63,8 +63,16 @@ def courses():
 @app.route('/add_courses', methods=['POST', 'GET'])
 def add_courses():
     if request.method == 'POST':
+
         if request.form['course_name']=='' or request.form['description']=='' or request.form['start_data']=='' or request.form['finish_data']=='' :
             flash('Заповніть всі поля')
+            return render_template('add_courses.html')
+
+        course_name_in_db = Course.query.filter_by(course_name=request.form['course_name']).first()
+        description_in_db = Course.query.filter_by(course_name=request.form['description']).first()
+        print(course_name_in_db, description_in_db)
+        if course_name_in_db != None or description_in_db != None:
+            flash('Курс із такою назвою або описом вже існує')
             return render_template('add_courses.html')
 
         if 'file' not in request.files:
@@ -82,15 +90,10 @@ def add_courses():
             file.save(os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], filename))
         
 
-        course_name_in_db = Course.query.filter_by(course_name = request.form['course_name']).first()
-        description_in_db = Course.query.filter_by(course_name = request.form['description']).first()
-        if course_name_in_db is None and description_in_db is None:
-            added_course = Course(course_name = request.form['course_name'], description = request.form['description'], start_data = datetime.datetime.strptime(request.form['start_data'], '%Y-%m-%d').date(), finish_data = datetime.datetime.strptime(request.form['finish_data'], '%Y-%m-%d').date(),  photo_src = os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            db.session.add(added_course)  
-            db.session.commit()
-            return redirect(url_for('courses'))
-        flash('Курс із такою назва або описом вже існує')
-        return render_template('add_courses.html')
+        added_course = Course(course_name = request.form['course_name'], description = request.form['description'], start_data = datetime.datetime.strptime(request.form['start_data'], '%Y-%m-%d').date(), finish_data = datetime.datetime.strptime(request.form['finish_data'], '%Y-%m-%d').date(),  photo_src = os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        db.session.add(added_course)
+        db.session.commit()
+        return redirect(url_for('courses'))
 
     else:
         return render_template('add_courses.html')
@@ -104,8 +107,8 @@ def single_course(course_id = None):
 
 @app.route('/course/<course_id>/delate')
 def delate(course_id = None):
-
     course_for_delating = Course.query.get(course_id)
+    os.remove(course_for_delating.photo_src)
     db.session.delete(course_for_delating)
     db.session.commit()
     return  redirect(url_for('courses'))
